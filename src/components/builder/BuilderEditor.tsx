@@ -185,7 +185,7 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <GripVertical className="w-4 h-4 text-neutral-400" />
+                    <GripVertical className="w-4 h-4 text-neutral-400 cursor-move" />
                     <span className="text-sm font-medium capitalize">{section.sectionType}</span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-neutral-400" />
