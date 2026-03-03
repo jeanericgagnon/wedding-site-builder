@@ -109,10 +109,6 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
             {sections.map((section, index) => (
               <div
                 key={section.id}
-                draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnd={handleDragEnd}
                 onClick={() => setSelectedSectionId(section.id)}
                 className={`relative group transition-all ${
                   selectedSectionId === section.id ? 'ring-2 ring-blue-500 ring-inset' : ''
@@ -177,6 +173,10 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
               {sections.map((section, index) => (
                 <div
                   key={section.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
                   onClick={() => setSelectedSectionId(section.id)}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all text-left cursor-pointer border-2 ${
                     selectedSectionId === section.id
