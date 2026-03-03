@@ -75,11 +75,11 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
   const availableSectionTypes = getAllSectionTypes();
 
   return (
-    <div className="fixed inset-0 bg-neutral-50 z-50 flex gap-2.5">
+    <div className="fixed inset-0 bg-neutral-50 z-50 flex">
       {/* Main Preview Area */}
       <div className="flex-1 bg-neutral-50 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto">
+          <div className="w-full">
             {sections.map((section) => (
               <div
                 key={section.id}
@@ -107,11 +107,11 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
             ))}
 
             {/* Add Section Button */}
-            <div className="p-8 border-t border-neutral-200 bg-white">
+            <div className="p-6 border-t border-neutral-200 bg-white">
               {!showAddSection ? (
                 <button
                   onClick={() => setShowAddSection(true)}
-                  className="w-full py-4 border-2 border-dashed border-neutral-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-neutral-600 hover:text-blue-600"
+                  className="w-full py-3 border-2 border-dashed border-neutral-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-neutral-600 hover:text-blue-600"
                 >
                   <Plus className="w-5 h-5" />
                   <span className="font-medium">Add section</span>
