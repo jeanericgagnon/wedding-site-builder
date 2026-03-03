@@ -52,3 +52,18 @@ export function groupVariantsBySection(variants: SectionVariant[]): Record<Secti
 
   return grouped as Record<SectionType, SectionVariant[]>;
 }
+
+export function renderSectionPreview(sectionType: SectionType, variantKey: string): React.ReactElement | null {
+  const Component = getSectionComponent(sectionType);
+  if (!Component) return null;
+
+  const mockDataGenerator = mockDataGenerators[sectionType];
+  if (!mockDataGenerator) return null;
+
+  const mockData = mockDataGenerator();
+
+  return React.createElement(Component, {
+    data: mockData,
+    variant: variantKey,
+  });
+}

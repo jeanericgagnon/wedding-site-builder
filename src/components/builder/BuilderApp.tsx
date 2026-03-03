@@ -1,12 +1,29 @@
 import React, { useState } from 'react';
 import { TemplateGallery } from './TemplateGallery';
 import { VariantGallery } from './VariantGallery';
+import { BuilderEditor } from './BuilderEditor';
+import { Template } from '../../types/builder';
 import { LayoutGrid as Layout, Grid2x2 as Grid, FileCode } from 'lucide-react';
 
-type BuilderView = 'templates' | 'variants' | 'manifest';
+type BuilderView = 'templates' | 'variants' | 'manifest' | 'editor';
 
 export const BuilderApp: React.FC = () => {
   const [activeView, setActiveView] = useState<BuilderView>('templates');
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+
+  const handleSelectTemplate = (template: Template) => {
+    setSelectedTemplate(template);
+    setActiveView('editor');
+  };
+
+  const handleCloseEditor = () => {
+    setActiveView('templates');
+    setSelectedTemplate(null);
+  };
+
+  if (activeView === 'editor' && selectedTemplate) {
+    return <BuilderEditor template={selectedTemplate} onClose={handleCloseEditor} />;
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -68,7 +85,7 @@ export const BuilderApp: React.FC = () => {
                 Choose from {35} professionally designed wedding site templates
               </p>
             </div>
-            <TemplateGallery onSelectTemplate={(template) => console.log('Selected template:', template)} />
+            <TemplateGallery onSelectTemplate={handleSelectTemplate} />
           </div>
         )}
 
