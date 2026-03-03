@@ -119,12 +119,20 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
             <X className="w-4 h-4" />
             Close
           </button>
-          <button
-            onClick={handleSave}
-            className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-          >
-            Publish
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {}}
+              className="px-4 py-1.5 bg-amber-50 text-amber-900 border border-amber-200 rounded-md hover:bg-amber-100 transition-colors text-sm font-medium"
+            >
+              Advanced
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              Publish
+            </button>
+          </div>
         </div>
 
         <div className="px-5 py-3 border-b border-neutral-200">
