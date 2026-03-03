@@ -31,6 +31,7 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
 
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [showAddSection, setShowAddSection] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const deleteSection = (id: string) => {
     const newSections = sections.filter(s => s.id !== id);
@@ -41,6 +42,31 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
     if (selectedSectionId === id) {
       setSelectedSectionId(null);
     }
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newSections = [...sections];
+    const draggedSection = newSections[draggedIndex];
+    newSections.splice(draggedIndex, 1);
+    newSections.splice(index, 0, draggedSection);
+
+    newSections.forEach((section, idx) => {
+      section.order = idx;
+    });
+
+    setSections(newSections);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const addSection = (sectionType: SectionType) => {
@@ -143,23 +169,27 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
           <div className="px-5 py-3">
             <h3 className="text-xs font-semibold text-neutral-700 mb-2">Sections</h3>
 
-            <div className="space-y-0.5">
-              {sections.map((section) => (
-                <button
+            <div className="space-y-1.5">
+              {sections.map((section, index) => (
+                <div
                   key={section.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
                   onClick={() => setSelectedSectionId(section.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors text-left ${
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all text-left cursor-move border-2 ${
                     selectedSectionId === section.id
-                      ? 'bg-neutral-100 text-neutral-900'
-                      : 'text-neutral-700 hover:bg-neutral-50'
-                  }`}
+                      ? 'bg-neutral-100 text-neutral-900 border-blue-400'
+                      : 'text-neutral-700 hover:bg-neutral-50 border-neutral-200'
+                  } ${draggedIndex === index ? 'opacity-50' : ''}`}
                 >
-                  <div className="flex items-center gap-2">
-                    <GripVertical className="w-3.5 h-3.5 text-neutral-400" />
-                    <span className="text-sm capitalize">{section.sectionType}</span>
+                  <div className="flex items-center gap-2.5">
+                    <GripVertical className="w-4 h-4 text-neutral-400" />
+                    <span className="text-sm font-medium capitalize">{section.sectionType}</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
-                </button>
+                  <ChevronRight className="w-4 h-4 text-neutral-400" />
+                </div>
               ))}
             </div>
           </div>
