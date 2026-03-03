@@ -116,7 +116,7 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
                 onClick={() => setSelectedSectionId(section.id)}
                 className={`relative group transition-all ${
                   selectedSectionId === section.id ? 'ring-2 ring-blue-500 ring-inset' : ''
-                } ${draggedIndex === index ? 'opacity-50' : ''} hover:cursor-move`}
+                } ${draggedIndex === index ? 'opacity-50' : ''}`}
               >
                 {renderSectionPreview(section.sectionType, section.variantKey)}
 
