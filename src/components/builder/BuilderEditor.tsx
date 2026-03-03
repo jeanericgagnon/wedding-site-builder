@@ -105,43 +105,6 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
                 </div>
               </div>
             ))}
-
-            {/* Add Section Button */}
-            <div className="p-6 border-t border-neutral-200 bg-white">
-              {!showAddSection ? (
-                <button
-                  onClick={() => setShowAddSection(true)}
-                  className="w-full py-3 border-2 border-dashed border-neutral-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-neutral-600 hover:text-blue-600"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span className="font-medium">Add section</span>
-                </button>
-              ) : (
-                <div className="bg-white border border-neutral-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-neutral-900">Add a section</h3>
-                    <button
-                      onClick={() => setShowAddSection(false)}
-                      className="p-1 hover:bg-neutral-100 rounded transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {availableSectionTypes.map((sectionType) => (
-                      <button
-                        key={sectionType}
-                        onClick={() => addSection(sectionType)}
-                        className="px-4 py-3 border border-neutral-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
-                      >
-                        <span className="text-sm font-medium capitalize">{sectionType}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -226,6 +189,43 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
               >
                 Delete section
               </button>
+            </div>
+          )}
+        </div>
+
+        {/* Add Section Button - Fixed at bottom */}
+        <div className="border-t border-neutral-200 px-5 py-3 bg-white">
+          {!showAddSection ? (
+            <button
+              onClick={() => setShowAddSection(true)}
+              className="w-full py-2.5 border-2 border-dashed border-neutral-300 rounded-md hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-neutral-600 hover:text-blue-600"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="text-sm font-medium">Add section</span>
+            </button>
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-neutral-900 text-sm">Add a section</h3>
+                <button
+                  onClick={() => setShowAddSection(false)}
+                  className="p-1 hover:bg-neutral-100 rounded transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                {availableSectionTypes.map((sectionType) => (
+                  <button
+                    key={sectionType}
+                    onClick={() => addSection(sectionType)}
+                    className="px-3 py-2.5 border border-neutral-200 rounded-md hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
+                  >
+                    <span className="text-sm font-medium capitalize">{sectionType}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
