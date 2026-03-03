@@ -106,13 +106,17 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
       <div className="flex-1 bg-neutral-50 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           <div className="w-full">
-            {sections.map((section) => (
+            {sections.map((section, index) => (
               <div
                 key={section.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
                 onClick={() => setSelectedSectionId(section.id)}
-                className={`relative group cursor-pointer transition-all ${
+                className={`relative group cursor-move transition-all ${
                   selectedSectionId === section.id ? 'ring-2 ring-blue-500 ring-inset' : ''
-                }`}
+                } ${draggedIndex === index ? 'opacity-50' : ''}`}
               >
                 {renderSectionPreview(section.sectionType, section.variantKey)}
 
@@ -173,16 +177,12 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
               {sections.map((section, index) => (
                 <div
                   key={section.id}
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragEnd={handleDragEnd}
                   onClick={() => setSelectedSectionId(section.id)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all text-left cursor-move border-2 ${
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all text-left cursor-pointer border-2 ${
                     selectedSectionId === section.id
                       ? 'bg-neutral-100 text-neutral-900 border-blue-400'
                       : 'text-neutral-700 hover:bg-neutral-50 border-neutral-200'
-                  } ${draggedIndex === index ? 'opacity-50' : ''}`}
+                  }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <GripVertical className="w-4 h-4 text-neutral-400" />
