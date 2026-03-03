@@ -75,60 +75,7 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
   const availableSectionTypes = getAllSectionTypes();
 
   return (
-    <div className="fixed inset-0 bg-white z-50 flex">
-      {/* Left Sidebar */}
-      <div className="w-80 bg-white border-r border-neutral-200 flex flex-col">
-        <div className="p-6 border-b border-neutral-200 flex items-center justify-between">
-          <div>
-            <button
-              onClick={onClose}
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-            >
-              <X className="w-4 h-4" />
-              Close
-            </button>
-          </div>
-          <button
-            onClick={handleSave}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-          >
-            Publish
-          </button>
-        </div>
-
-        <div className="p-6 border-b border-neutral-200">
-          <h2 className="font-semibold text-neutral-900 mb-1">Website settings</h2>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-neutral-700">Sections</h3>
-            </div>
-
-            <div className="space-y-1">
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => setSelectedSectionId(section.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-left ${
-                    selectedSectionId === section.id
-                      ? 'bg-neutral-100 text-neutral-900'
-                      : 'text-neutral-700 hover:bg-neutral-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <GripVertical className="w-4 h-4 text-neutral-400" />
-                    <span className="text-sm capitalize">{section.sectionType}</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-neutral-400" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="fixed inset-0 bg-neutral-50 z-50 flex gap-2.5">
       {/* Main Preview Area */}
       <div className="flex-1 bg-neutral-50 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto">
@@ -199,43 +146,94 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
         </div>
       </div>
 
-      {/* Right Settings Panel - Only show when section is selected */}
-      {selectedSection && (
-        <div className="w-80 bg-white border-l border-neutral-200 flex flex-col">
-          <div className="p-6 border-b border-neutral-200 flex items-center gap-2">
-            <Settings className="w-5 h-5 text-neutral-600" />
-            <h3 className="font-semibold text-neutral-900 capitalize">{selectedSection.sectionType}</h3>
-          </div>
-
-          <div className="p-6">
-            <div className="mb-6">
-              <label className="text-sm font-medium text-neutral-700 block mb-2">Variant</label>
-              <select
-                value={selectedSection.variantKey}
-                onChange={(e) => {
-                  setSections(sections.map(s =>
-                    s.id === selectedSectionId ? { ...s, variantKey: e.target.value } : s
-                  ));
-                }}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              >
-                {getVariantsBySection(selectedSection.sectionType).map((variant) => (
-                  <option key={variant.variantKey} value={variant.variantKey}>
-                    {variant.displayName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+      {/* Right Sidebar */}
+      <div className="w-96 bg-white flex flex-col h-screen">
+        <div className="p-6 border-b border-neutral-200 flex items-center justify-between">
+          <div>
             <button
-              onClick={() => deleteSection(selectedSection.id)}
-              className="w-full px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+              onClick={onClose}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
             >
-              Delete section
+              <X className="w-4 h-4" />
+              Close
             </button>
           </div>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            Publish
+          </button>
         </div>
-      )}
+
+        <div className="p-6 border-b border-neutral-200">
+          <h2 className="font-semibold text-neutral-900 mb-1">Website settings</h2>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-neutral-700">Sections</h3>
+            </div>
+
+            <div className="space-y-1">
+              {sections.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => setSelectedSectionId(section.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-left ${
+                    selectedSectionId === section.id
+                      ? 'bg-neutral-100 text-neutral-900'
+                      : 'text-neutral-700 hover:bg-neutral-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <GripVertical className="w-4 h-4 text-neutral-400" />
+                    <span className="text-sm capitalize">{section.sectionType}</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-neutral-400" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Section Settings - Show when selected */}
+          {selectedSection && (
+            <div className="border-t border-neutral-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Settings className="w-5 h-5 text-neutral-600" />
+                <h3 className="font-semibold text-neutral-900 capitalize">{selectedSection.sectionType}</h3>
+              </div>
+
+              <div className="mb-6">
+                <label className="text-sm font-medium text-neutral-700 block mb-2">Variant</label>
+                <select
+                  value={selectedSection.variantKey}
+                  onChange={(e) => {
+                    setSections(sections.map(s =>
+                      s.id === selectedSectionId ? { ...s, variantKey: e.target.value } : s
+                    ));
+                  }}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  {getVariantsBySection(selectedSection.sectionType).map((variant) => (
+                    <option key={variant.variantKey} value={variant.variantKey}>
+                      {variant.displayName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={() => deleteSection(selectedSection.id)}
+                className="w-full px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+              >
+                Delete section
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
