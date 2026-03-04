@@ -254,7 +254,16 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
           </div>
 
         <div className="px-5 py-3 border-b border-neutral-200">
-          <h2 className="font-semibold text-neutral-900 text-sm">Website settings</h2>
+          <h2 className="font-semibold text-neutral-900 text-sm">
+            {editingMode === 'list'
+              ? 'Website settings'
+              : editingMode === 'variants' && variantSectionType
+              ? `${variantSectionType.charAt(0).toUpperCase() + variantSectionType.slice(1)} Designs`
+              : selectedSection
+              ? `${selectedSection.sectionType.charAt(0).toUpperCase() + selectedSection.sectionType.slice(1)} Section`
+              : 'Website settings'
+            }
+          </h2>
         </div>
 
         <div className="flex-1 overflow-y-auto">
