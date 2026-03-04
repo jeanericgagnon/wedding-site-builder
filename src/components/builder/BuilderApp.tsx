@@ -44,7 +44,6 @@ export const BuilderApp: React.FC = () => {
                     : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
                 }`}
               >
-                <Layout className="w-4 h-4" />
                 Templates
               </button>
 
