@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Template, TemplateSection, SectionType } from '../../types/builder';
 import { renderSectionPreview } from '../../lib/previewGenerator';
 import { getVariantsBySection, getAllSectionTypes } from '../../registry/sectionRegistry';
+import { mockDataGenerators } from '../../types/mockData';
 import {
   ChevronRight,
   ChevronLeft,
@@ -12,6 +13,7 @@ import {
   Image,
   Type,
   Sliders,
+  Palette,
 } from 'lucide-react';
 
 interface BuilderEditorProps {
@@ -41,33 +43,40 @@ interface EditableSection extends TemplateSection {
 
 export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose }) => {
   const [sections, setSections] = useState<EditableSection[]>(
-    template.sections.map((section, idx) => ({
-      ...section,
-      id: `section-${idx}-${Date.now()}`,
-      enabled: true,
-      content: {
-        heading: 'Sample Heading',
-        subheading: 'Sample Subheading',
-        text: 'Sample text content',
-        images: [],
-        buttonText: 'Learn More',
-        buttonLink: '#',
-      },
-      advanced: {
-        opacity: 100,
-        animation: 'none',
-        customCSS: '',
-        backgroundColor: '',
-        textColor: '',
-      },
-    }))
+    template.sections.map((section, idx) => {
+      const mockData = mockDataGenerators[section.sectionType]?.() || {};
+      const sectionData = section.data || mockData;
+
+      return {
+        ...section,
+        id: `section-${idx}-${Date.now()}`,
+        enabled: true,
+        data: sectionData,
+        content: {
+          heading: (sectionData as any).title || (sectionData as any).names || (sectionData as any).heading || '',
+          subheading: (sectionData as any).tagline || (sectionData as any).date || (sectionData as any).subheading || '',
+          text: (sectionData as any).description || (sectionData as any).message || (sectionData as any).text || '',
+          images: (sectionData as any).images || (sectionData as any).image ? [(sectionData as any).image] : [],
+          buttonText: (sectionData as any).buttonText || '',
+          buttonLink: (sectionData as any).buttonLink || '#',
+        },
+        advanced: {
+          opacity: 100,
+          animation: 'none',
+          customCSS: '',
+          backgroundColor: '',
+          textColor: '',
+        },
+      };
+    })
   );
 
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [showAddSection, setShowAddSection] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [editingMode, setEditingMode] = useState<'list' | 'edit'>('list');
+  const [editingMode, setEditingMode] = useState<'list' | 'edit' | 'variants'>('list');
+  const [variantSectionType, setVariantSectionType] = useState<SectionType | null>(null);
 
   const deleteSection = (id: string) => {
     const newSections = sections.filter(s => s.id !== id);
@@ -270,6 +279,79 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
                 ))}
               </div>
             </div>
+          ) : editingMode === 'variants' && variantSectionType ? (
+            <div className="h-full flex flex-col">
+              <div className="px-5 py-3 border-b border-neutral-200">
+                <button
+                  onClick={() => setEditingMode('edit')}
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back to Settings
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                <div className="mb-4">
+                  <h3 className="font-semibold text-neutral-900 capitalize text-lg mb-1">
+                    {variantSectionType} Designs
+                  </h3>
+                  <p className="text-xs text-neutral-500">Choose a design style for this section</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  {getVariantsBySection(variantSectionType).map((variant) => {
+                    const isSelected = selectedSection?.variantKey === variant.variantKey;
+                    return (
+                      <button
+                        key={variant.variantKey}
+                        onClick={() => {
+                          if (selectedSectionId) {
+                            setSections(sections.map(s =>
+                              s.id === selectedSectionId ? { ...s, variantKey: variant.variantKey } : s
+                            ));
+                            setEditingMode('edit');
+                          }
+                        }}
+                        className={`relative group rounded-lg overflow-hidden border-2 transition-all text-left ${
+                          isSelected
+                            ? 'border-blue-500 shadow-lg'
+                            : 'border-neutral-200 hover:border-blue-300 hover:shadow-md'
+                        }`}
+                      >
+                        <div className="aspect-video bg-neutral-100 flex items-center justify-center overflow-hidden">
+                          {renderSectionPreview(variantSectionType, variant.variantKey)}
+                        </div>
+                        <div className="p-3 bg-white">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="text-sm font-semibold text-neutral-900">{variant.displayName}</h4>
+                              {variant.description && (
+                                <p className="text-xs text-neutral-500 mt-0.5">{variant.description}</p>
+                              )}
+                            </div>
+                            {isSelected && (
+                              <div className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                                Current
+                              </div>
+                            )}
+                          </div>
+                          {variant.tags && variant.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {variant.tags.slice(0, 3).map((tag) => (
+                                <span key={tag} className="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-xs rounded">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           ) : (
             selectedSection && (
               <div className="h-full flex flex-col">
@@ -372,22 +454,25 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-neutral-700 block mb-1.5">Variant Style</label>
-                    <select
-                      value={selectedSection.variantKey}
-                      onChange={(e) => {
-                        setSections(sections.map(s =>
-                          s.id === selectedSectionId ? { ...s, variantKey: e.target.value } : s
-                        ));
+                    <label className="text-xs font-medium text-neutral-700 block mb-2">Design Style</label>
+                    <button
+                      onClick={() => {
+                        setVariantSectionType(selectedSection.sectionType);
+                        setEditingMode('variants');
                       }}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-4 py-3 border-2 border-neutral-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-between group"
                     >
-                      {getVariantsBySection(selectedSection.sectionType).map((variant) => (
-                        <option key={variant.variantKey} value={variant.variantKey}>
-                          {variant.displayName}
-                        </option>
-                      ))}
-                    </select>
+                      <div className="flex items-center gap-3">
+                        <Palette className="w-5 h-5 text-neutral-500 group-hover:text-blue-600" />
+                        <div className="text-left">
+                          <div className="text-sm font-medium text-neutral-900">
+                            {getVariantsBySection(selectedSection.sectionType).find(v => v.variantKey === selectedSection.variantKey)?.displayName || 'Select Design'}
+                          </div>
+                          <div className="text-xs text-neutral-500">Current design style</div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-blue-600" />
+                    </button>
                   </div>
 
                   {showAdvanced && (
