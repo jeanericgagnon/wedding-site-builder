@@ -4,7 +4,7 @@ import { renderSectionPreview } from '../../lib/previewGenerator';
 import { getVariantsBySection, getAllSectionTypes } from '../../registry/sectionRegistry';
 import {
   ChevronRight,
-  ChevronDown,
+  ChevronLeft,
   Settings,
   Plus,
   GripVertical,
@@ -66,8 +66,8 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [showAddSection, setShowAddSection] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [expandedSectionId, setExpandedSectionId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [editingMode, setEditingMode] = useState<'list' | 'edit'>('list');
 
   const deleteSection = (id: string) => {
     const newSections = sections.filter(s => s.id !== id);
@@ -239,263 +239,296 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="px-5 py-3">
-            <h3 className="text-xs font-semibold text-neutral-700 mb-2">Sections</h3>
+          {editingMode === 'list' ? (
+            <div className="px-5 py-3">
+              <h3 className="text-xs font-semibold text-neutral-700 mb-2">Sections</h3>
 
-            <div className="space-y-1.5">
-              {sections.map((section, index) => (
-                <div key={section.id} className="border-2 border-neutral-200 rounded-lg overflow-hidden">
+              <div className="space-y-1.5">
+                {sections.map((section, index) => (
                   <div
+                    key={section.id}
                     draggable
                     onDragStart={() => handleDragStart(index)}
                     onDragOver={(e) => handleDragOver(e, index)}
                     onDragEnd={handleDragEnd}
                     onClick={() => {
                       setSelectedSectionId(section.id);
-                      setExpandedSectionId(expandedSectionId === section.id ? null : section.id);
+                      setEditingMode('edit');
                     }}
-                    className={`w-full flex items-center justify-between px-4 py-3 transition-all text-left cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all text-left cursor-pointer border-2 ${
                       selectedSectionId === section.id
-                        ? 'bg-blue-50 text-neutral-900'
-                        : 'text-neutral-700 hover:bg-neutral-50'
+                        ? 'bg-neutral-100 text-neutral-900 border-blue-400'
+                        : 'text-neutral-700 hover:bg-neutral-50 border-neutral-200'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <GripVertical className="w-4 h-4 text-neutral-400 cursor-move" />
                       <span className="text-sm font-medium capitalize">{section.sectionType}</span>
                     </div>
-                    {expandedSectionId === section.id ? (
-                      <ChevronDown className="w-4 h-4 text-neutral-400" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-neutral-400" />
-                    )}
+                    <ChevronRight className="w-4 h-4 text-neutral-400" />
                   </div>
-
-                  {/* Expanded Content Editor */}
-                  {expandedSectionId === section.id && (
-                    <div className="px-4 py-3 bg-white border-t border-neutral-200 space-y-3">
-                      {/* Content Fields */}
-                      <div>
-                        <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
-                          <Type className="w-3.5 h-3.5" />
-                          Heading
-                        </label>
-                        <input
-                          type="text"
-                          value={section.content?.heading || ''}
-                          onChange={(e) => updateSectionContent('heading', e.target.value)}
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                          placeholder="Enter heading"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
-                          <Type className="w-3.5 h-3.5" />
-                          Subheading
-                        </label>
-                        <input
-                          type="text"
-                          value={section.content?.subheading || ''}
-                          onChange={(e) => updateSectionContent('subheading', e.target.value)}
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                          placeholder="Enter subheading"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
-                          <Type className="w-3.5 h-3.5" />
-                          Text Content
-                        </label>
-                        <textarea
-                          value={section.content?.text || ''}
-                          onChange={(e) => updateSectionContent('text', e.target.value)}
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                          rows={3}
-                          placeholder="Enter text content"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
-                          <Image className="w-3.5 h-3.5" />
-                          Image URL
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="https://example.com/image.jpg"
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Text</label>
-                          <input
-                            type="text"
-                            value={section.content?.buttonText || ''}
-                            onChange={(e) => updateSectionContent('buttonText', e.target.value)}
-                            className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                            placeholder="Button text"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Link</label>
-                          <input
-                            type="text"
-                            value={section.content?.buttonLink || ''}
-                            onChange={(e) => updateSectionContent('buttonLink', e.target.value)}
-                            className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                            placeholder="#"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Advanced Settings */}
-                      {showAdvanced && (
-                        <div className="pt-3 border-t border-neutral-200 space-y-3">
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <Sliders className="w-3.5 h-3.5 text-amber-600" />
-                            <h4 className="text-xs font-semibold text-amber-900">Advanced Settings</h4>
-                          </div>
-
-                          <div>
-                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">
-                              Opacity: {section.advanced?.opacity}%
-                            </label>
-                            <input
-                              type="range"
-                              min="0"
-                              max="100"
-                              value={section.advanced?.opacity || 100}
-                              onChange={(e) => updateSectionAdvanced('opacity', parseInt(e.target.value))}
-                              className="w-full"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">Animation</label>
-                            <select
-                              value={section.advanced?.animation || 'none'}
-                              onChange={(e) => updateSectionAdvanced('animation', e.target.value)}
-                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                            >
-                              <option value="none">None</option>
-                              <option value="fade-in">Fade In</option>
-                              <option value="slide-up">Slide Up</option>
-                              <option value="slide-down">Slide Down</option>
-                              <option value="zoom-in">Zoom In</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">Background Color</label>
-                            <input
-                              type="text"
-                              value={section.advanced?.backgroundColor || ''}
-                              onChange={(e) => updateSectionAdvanced('backgroundColor', e.target.value)}
-                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                              placeholder="#ffffff or transparent"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">Text Color</label>
-                            <input
-                              type="text"
-                              value={section.advanced?.textColor || ''}
-                              onChange={(e) => updateSectionAdvanced('textColor', e.target.value)}
-                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                              placeholder="#000000"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">Custom CSS</label>
-                            <textarea
-                              value={section.advanced?.customCSS || ''}
-                              onChange={(e) => updateSectionAdvanced('customCSS', e.target.value)}
-                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono resize-none"
-                              rows={4}
-                              placeholder="padding: 20px;&#10;margin: 0;"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      <div>
-                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">Variant</label>
-                        <select
-                          value={section.variantKey}
-                          onChange={(e) => {
-                            setSections(sections.map(s =>
-                              s.id === section.id ? { ...s, variantKey: e.target.value } : s
-                            ));
-                          }}
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        >
-                          {getVariantsBySection(section.sectionType).map((variant) => (
-                            <option key={variant.variantKey} value={variant.variantKey}>
-                              {variant.displayName}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteSection(section.id);
-                        }}
-                        className="w-full px-3 py-2 text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors text-sm font-medium"
-                      >
-                        Delete Section
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Add Section Button - Fixed at bottom */}
-        <div className="border-t border-neutral-200 px-5 py-3 bg-white">
-          {!showAddSection ? (
-            <button
-              onClick={() => setShowAddSection(true)}
-              className="w-full py-2.5 border-2 border-dashed border-neutral-300 rounded-md hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-neutral-600 hover:text-blue-600"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="text-sm font-medium">Add section</span>
-            </button>
-          ) : (
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-neutral-900 text-sm">Add a section</h3>
-                <button
-                  onClick={() => setShowAddSection(false)}
-                  className="p-1 hover:bg-neutral-100 rounded transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                {availableSectionTypes.map((sectionType) => (
-                  <button
-                    key={sectionType}
-                    onClick={() => addSection(sectionType)}
-                    className="px-3 py-2.5 border border-neutral-200 rounded-md hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
-                  >
-                    <span className="text-sm font-medium capitalize">{sectionType}</span>
-                  </button>
                 ))}
               </div>
             </div>
+          ) : (
+            selectedSection && (
+              <div className="h-full flex flex-col">
+                <div className="px-5 py-3 border-b border-neutral-200">
+                  <button
+                    onClick={() => {
+                      setEditingMode('list');
+                      setShowAdvanced(false);
+                    }}
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Back to Sections
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-neutral-900 capitalize text-lg mb-1">
+                      {selectedSection.sectionType} Section
+                    </h3>
+                    <p className="text-xs text-neutral-500">Edit content and styling for this section</p>
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
+                      <Type className="w-3.5 h-3.5" />
+                      Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedSection.content?.heading || ''}
+                      onChange={(e) => updateSectionContent('heading', e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Enter heading"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
+                      <Type className="w-3.5 h-3.5" />
+                      Subheading
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedSection.content?.subheading || ''}
+                      onChange={(e) => updateSectionContent('subheading', e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Enter subheading"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
+                      <Type className="w-3.5 h-3.5" />
+                      Text Content
+                    </label>
+                    <textarea
+                      value={selectedSection.content?.text || ''}
+                      onChange={(e) => updateSectionContent('text', e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                      rows={4}
+                      placeholder="Enter text content"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
+                      <Image className="w-3.5 h-3.5" />
+                      Image URL
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Text</label>
+                      <input
+                        type="text"
+                        value={selectedSection.content?.buttonText || ''}
+                        onChange={(e) => updateSectionContent('buttonText', e.target.value)}
+                        className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="Button text"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Link</label>
+                      <input
+                        type="text"
+                        value={selectedSection.content?.buttonLink || ''}
+                        onChange={(e) => updateSectionContent('buttonLink', e.target.value)}
+                        className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="#"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-neutral-700 block mb-1.5">Variant Style</label>
+                    <select
+                      value={selectedSection.variantKey}
+                      onChange={(e) => {
+                        setSections(sections.map(s =>
+                          s.id === selectedSectionId ? { ...s, variantKey: e.target.value } : s
+                        ));
+                      }}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    >
+                      {getVariantsBySection(selectedSection.sectionType).map((variant) => (
+                        <option key={variant.variantKey} value={variant.variantKey}>
+                          {variant.displayName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {showAdvanced && (
+                    <div className="pt-4 border-t border-neutral-200 space-y-4">
+                      <div className="flex items-center gap-1.5">
+                        <Sliders className="w-4 h-4 text-amber-600" />
+                        <h4 className="text-sm font-semibold text-amber-900">Advanced Settings</h4>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                          Opacity: {selectedSection.advanced?.opacity}%
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={selectedSection.advanced?.opacity || 100}
+                          onChange={(e) => updateSectionAdvanced('opacity', parseInt(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">Animation</label>
+                        <select
+                          value={selectedSection.advanced?.animation || 'none'}
+                          onChange={(e) => updateSectionAdvanced('animation', e.target.value)}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                          <option value="none">None</option>
+                          <option value="fade-in">Fade In</option>
+                          <option value="slide-up">Slide Up</option>
+                          <option value="slide-down">Slide Down</option>
+                          <option value="zoom-in">Zoom In</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">Background Color</label>
+                        <input
+                          type="text"
+                          value={selectedSection.advanced?.backgroundColor || ''}
+                          onChange={(e) => updateSectionAdvanced('backgroundColor', e.target.value)}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="#ffffff or transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">Text Color</label>
+                        <input
+                          type="text"
+                          value={selectedSection.advanced?.textColor || ''}
+                          onChange={(e) => updateSectionAdvanced('textColor', e.target.value)}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="#000000"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">Custom CSS</label>
+                        <textarea
+                          value={selectedSection.advanced?.customCSS || ''}
+                          onChange={(e) => updateSectionAdvanced('customCSS', e.target.value)}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono resize-none"
+                          rows={6}
+                          placeholder="padding: 20px;&#10;margin: 0;"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-neutral-200 px-5 py-4 bg-white space-y-2">
+                  <button
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className={`w-full px-4 py-2.5 border rounded-lg transition-colors text-sm font-medium ${
+                      showAdvanced
+                        ? 'bg-amber-100 text-amber-900 border-amber-300'
+                        : 'bg-white text-amber-900 border-amber-200 hover:bg-amber-50'
+                    }`}
+                  >
+                    {showAdvanced ? 'Hide Advanced' : 'Show Advanced'}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this section?')) {
+                        deleteSection(selectedSection.id);
+                        setEditingMode('list');
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+                  >
+                    Delete Section
+                  </button>
+                </div>
+              </div>
+            )
           )}
         </div>
+
+        {/* Add Section Button - Fixed at bottom - Only show in list mode */}
+        {editingMode === 'list' && (
+          <div className="border-t border-neutral-200 px-5 py-3 bg-white">
+            {!showAddSection ? (
+              <button
+                onClick={() => setShowAddSection(true)}
+                className="w-full py-2.5 border-2 border-dashed border-neutral-300 rounded-md hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-neutral-600 hover:text-blue-600"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="text-sm font-medium">Add section</span>
+              </button>
+            ) : (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-neutral-900 text-sm">Add a section</h3>
+                  <button
+                    onClick={() => setShowAddSection(false)}
+                    className="p-1 hover:bg-neutral-100 rounded transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                  {availableSectionTypes.map((sectionType) => (
+                    <button
+                      key={sectionType}
+                      onClick={() => addSection(sectionType)}
+                      className="px-3 py-2.5 border border-neutral-200 rounded-md hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
+                    >
+                      <span className="text-sm font-medium capitalize">{sectionType}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
