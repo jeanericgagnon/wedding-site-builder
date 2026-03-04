@@ -53,7 +53,14 @@ export function groupVariantsBySection(variants: SectionVariant[]): Record<Secti
   return grouped as Record<SectionType, SectionVariant[]>;
 }
 
-export function renderSectionPreview(sectionType: SectionType, variantKey: string): React.ReactElement | null {
+export function renderSectionPreview(
+  sectionType: SectionType,
+  variantKey: string,
+  options?: {
+    isPreviewMode?: boolean;
+    onEditField?: (fieldPath: string) => void;
+  }
+): React.ReactElement | null {
   const Component = getSectionComponent(sectionType);
   if (!Component) return null;
 
@@ -65,5 +72,7 @@ export function renderSectionPreview(sectionType: SectionType, variantKey: strin
   return React.createElement(Component, {
     data: mockData,
     variant: variantKey,
+    isPreviewMode: options?.isPreviewMode,
+    onEditField: options?.onEditField,
   });
 }

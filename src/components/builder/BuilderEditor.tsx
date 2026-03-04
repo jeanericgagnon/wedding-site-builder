@@ -67,7 +67,7 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
   const [editingMode, setEditingMode] = useState<'list' | 'edit' | 'variants'>('list');
   const [variantSectionType, setVariantSectionType] = useState<SectionType | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [hoveredSectionId, setHoveredSectionId] = useState<string | null>(null);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const deleteSection = (id: string) => {
     const newSections = sections.filter(s => s.id !== id);
@@ -199,34 +199,26 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
             {sections.map((section, index) => (
               <div
                 key={section.id}
-                onMouseEnter={() => setHoveredSectionId(section.id)}
-                onMouseLeave={() => setHoveredSectionId(null)}
                 className={`relative transition-all ${
                   selectedSectionId === section.id && !isFullscreen ? 'ring-2 ring-blue-500 ring-inset' : ''
                 } ${draggedIndex === index ? 'opacity-50' : ''}`}
               >
-                {renderSectionPreview(section.sectionType, section.variantKey)}
-
-                {/* Hover overlay with edit button */}
-                {hoveredSectionId === section.id && (
-                  <div className="absolute inset-0 bg-blue-600/5 border-2 border-blue-500 pointer-events-none">
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedSectionId(section.id);
-                          setIsFullscreen(false);
-                          setEditingMode('edit');
-                        }}
-                        className="px-6 py-3 bg-white border-2 border-blue-500 rounded-lg shadow-lg hover:bg-blue-50 transition-all flex items-center gap-2 group"
-                        title="Edit section"
-                      >
-                        <Edit3 className="w-5 h-5 text-blue-600" />
-                        <span className="text-sm font-semibold text-blue-600">Edit Section</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {renderSectionPreview(section.sectionType, section.variantKey, {
+                  isPreviewMode: isFullscreen,
+                  onEditField: (fieldPath: string) => {
+                    setSelectedSectionId(section.id);
+                    setIsFullscreen(false);
+                    setEditingMode('edit');
+                    setFocusedField(fieldPath);
+                    setTimeout(() => {
+                      const input = document.querySelector(`[data-field="${fieldPath}"]`) as HTMLInputElement;
+                      if (input) {
+                        input.focus();
+                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }, 100);
+                  }
+                })}
               </div>
             ))}
           </div>
