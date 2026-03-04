@@ -3,18 +3,7 @@ import { Template, TemplateSection, SectionType } from '../../types/builder';
 import { renderSectionPreview } from '../../lib/previewGenerator';
 import { getVariantsBySection, getAllSectionTypes } from '../../registry/sectionRegistry';
 import { mockDataGenerators } from '../../types/mockData';
-import {
-  ChevronRight,
-  ChevronLeft,
-  Settings,
-  Plus,
-  GripVertical,
-  X,
-  Image,
-  Type,
-  Sliders,
-  Palette,
-} from 'lucide-react';
+import { ChevronRight, ChevronLeft, Settings, Plus, GripVertical, X, Image, Type, Sliders, Palette, CreditCard as Edit3, Maximize2 } from 'lucide-react';
 
 interface BuilderEditorProps {
   template: Template;
@@ -77,6 +66,8 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [editingMode, setEditingMode] = useState<'list' | 'edit' | 'variants'>('list');
   const [variantSectionType, setVariantSectionType] = useState<SectionType | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hoveredSectionId, setHoveredSectionId] = useState<string | null>(null);
 
   const deleteSection = (id: string) => {
     const newSections = sections.filter(s => s.id !== id);
@@ -181,67 +172,93 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
   return (
     <div className="fixed inset-0 bg-neutral-50 z-50 flex">
       {/* Main Preview Area */}
-      <div className="flex-1 bg-neutral-50 flex flex-col overflow-hidden">
+      <div className={`bg-neutral-50 flex flex-col overflow-hidden transition-all ${
+        isFullscreen ? 'flex-1' : 'flex-1'
+      }`}>
+        {/* Top Bar for Fullscreen */}
+        {isFullscreen && (
+          <div className="bg-white border-b border-neutral-200 px-6 py-3 flex items-center justify-between">
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back to Editor
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              Publish
+            </button>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto">
           <div className="w-full">
             {sections.map((section, index) => (
               <div
                 key={section.id}
-                onClick={() => setSelectedSectionId(section.id)}
-                className={`relative group transition-all ${
-                  selectedSectionId === section.id ? 'ring-2 ring-blue-500 ring-inset' : ''
+                onMouseEnter={() => setHoveredSectionId(section.id)}
+                onMouseLeave={() => setHoveredSectionId(null)}
+                className={`relative transition-all ${
+                  selectedSectionId === section.id && !isFullscreen ? 'ring-2 ring-blue-500 ring-inset' : ''
                 } ${draggedIndex === index ? 'opacity-50' : ''}`}
               >
                 {renderSectionPreview(section.sectionType, section.variantKey)}
 
-                {/* Hover overlay with delete */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteSection(section.id);
-                    }}
-                    className="p-2 bg-white border border-neutral-200 rounded-lg shadow-sm hover:bg-red-50 hover:border-red-300 transition-colors"
-                    title="Delete section"
-                  >
-                    <X className="w-4 h-4 text-neutral-600 hover:text-red-600" />
-                  </button>
-                </div>
+                {/* Hover overlay with edit button */}
+                {hoveredSectionId === section.id && (
+                  <div className="absolute inset-0 bg-blue-600/5 border-2 border-blue-500 pointer-events-none">
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSectionId(section.id);
+                          setIsFullscreen(false);
+                          setEditingMode('edit');
+                        }}
+                        className="px-6 py-3 bg-white border-2 border-blue-500 rounded-lg shadow-lg hover:bg-blue-50 transition-all flex items-center gap-2 group"
+                        title="Edit section"
+                      >
+                        <Edit3 className="w-5 h-5 text-blue-600" />
+                        <span className="text-sm font-semibold text-blue-600">Edit Section</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Right Sidebar - 33% bigger */}
-      <div className="w-[512px] bg-white flex flex-col h-screen">
-        <div className="px-5 py-3 border-b border-neutral-200 flex items-center justify-between">
-          <button
-            onClick={onClose}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
-          >
-            <X className="w-4 h-4" />
-            Close
-          </button>
-          <div className="flex items-center gap-2">
+      {/* Right Sidebar - Hidden in fullscreen */}
+      {!isFullscreen && (
+        <div className="w-[512px] bg-white flex flex-col h-screen">
+          <div className="px-5 py-3 border-b border-neutral-200 flex items-center justify-between">
             <button
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`px-4 py-1.5 border rounded-md transition-colors text-sm font-medium ${
-                showAdvanced
-                  ? 'bg-amber-100 text-amber-900 border-amber-300'
-                  : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
-              }`}
+              onClick={() => setIsFullscreen(true)}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1.5"
             >
-              Advanced
+              <Maximize2 className="w-4 h-4" />
+              Fullscreen
             </button>
-            <button
-              onClick={handleSave}
-              className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-            >
-              Publish
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onClose}
+                className="px-3 py-1.5 border border-neutral-300 rounded-md hover:bg-neutral-50 transition-colors text-sm font-medium text-neutral-700"
+              >
+                Exit
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                Publish
+              </button>
+            </div>
           </div>
-        </div>
 
         <div className="px-5 py-3 border-b border-neutral-200">
           <h2 className="font-semibold text-neutral-900 text-sm">Website settings</h2>
@@ -614,7 +631,8 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
             )}
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
