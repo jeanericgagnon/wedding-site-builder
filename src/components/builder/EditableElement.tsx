@@ -22,18 +22,19 @@ export const EditableElement: React.FC<EditableElementProps> = ({
 
   return (
     <div
-      className="relative inline-block"
+      className="relative inline-block group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {children}
 
       {isHovered && (
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 border-2 border-blue-500 bg-blue-500/10 rounded" />
-          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 pointer-events-auto whitespace-nowrap z-50">
+        <>
+          <div className="absolute inset-0 border-2 border-blue-500 bg-blue-500/10 rounded pointer-events-none z-10" />
+          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-[100]">
             <button
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 onEdit();
               }}
@@ -43,7 +44,7 @@ export const EditableElement: React.FC<EditableElementProps> = ({
               Edit {fieldLabel}
             </button>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

@@ -205,6 +205,7 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
               >
                 {renderSectionPreview(section.sectionType, section.variantKey, {
                   isPreviewMode: true,
+                  data: section.data,
                   onEditField: (fieldPath: string) => {
                     setSelectedSectionId(section.id);
                     setIsFullscreen(false);

@@ -59,18 +59,22 @@ export function renderSectionPreview(
   options?: {
     isPreviewMode?: boolean;
     onEditField?: (fieldPath: string) => void;
+    data?: any;
   }
 ): React.ReactElement | null {
   const Component = getSectionComponent(sectionType);
   if (!Component) return null;
 
-  const mockDataGenerator = mockDataGenerators[sectionType];
-  if (!mockDataGenerator) return null;
+  let sectionData = options?.data;
 
-  const mockData = mockDataGenerator();
+  if (!sectionData) {
+    const mockDataGenerator = mockDataGenerators[sectionType];
+    if (!mockDataGenerator) return null;
+    sectionData = mockDataGenerator();
+  }
 
   return React.createElement(Component, {
-    data: mockData,
+    data: sectionData,
     variant: variantKey,
     isPreviewMode: options?.isPreviewMode,
     onEditField: options?.onEditField,
