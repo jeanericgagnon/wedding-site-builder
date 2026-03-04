@@ -3,6 +3,7 @@ import { Template, TemplateSection, SectionType } from '../../types/builder';
 import { renderSectionPreview } from '../../lib/previewGenerator';
 import { getVariantsBySection, getAllSectionTypes } from '../../registry/sectionRegistry';
 import { mockDataGenerators } from '../../types/mockData';
+import { mergeContentToData, getFieldsForSection, sectionHasButtons } from '../../types/sectionConfig';
 import { ChevronRight, ChevronLeft, Settings, Plus, GripVertical, X, Image, Type, Sliders, Palette, CreditCard as Edit3, Maximize2 } from 'lucide-react';
 
 interface BuilderEditorProps {
@@ -197,34 +198,10 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
         <div className="flex-1 overflow-y-auto">
           <div className="w-full">
             {sections.map((section, index) => {
-              // Merge content changes back into data with proper field mapping
-              const mergedData = { ...section.data };
-              if (section.content) {
-                // Map generic content fields to section-specific data fields
-                if (section.sectionType === 'hero') {
-                  if (section.content.heading) mergedData.names = section.content.heading;
-                  if (section.content.subheading) mergedData.tagline = section.content.subheading;
-                  if (section.content.text) mergedData.date = section.content.text;
-                } else if (section.sectionType === 'story') {
-                  if (section.content.heading) mergedData.title = section.content.heading;
-                  if (section.content.text) mergedData.story = section.content.text;
-                } else if (section.sectionType === 'timeline') {
-                  if (section.content.heading) mergedData.title = section.content.heading;
-                } else if (section.sectionType === 'gallery') {
-                  if (section.content.heading) mergedData.title = section.content.heading;
-                  if (section.content.subheading) mergedData.subtitle = section.content.subheading;
-                } else if (section.sectionType === 'schedule') {
-                  if (section.content.heading) mergedData.title = section.content.heading;
-                } else if (section.sectionType === 'location') {
-                  if (section.content.heading) mergedData.venue = section.content.heading;
-                  if (section.content.subheading) mergedData.address = section.content.subheading;
-                } else if (section.sectionType === 'rsvp') {
-                  if (section.content.heading) mergedData.title = section.content.heading;
-                  if (section.content.text) mergedData.message = section.content.text;
-                } else if (section.sectionType === 'footer') {
-                  if (section.content.text) mergedData.message = section.content.text;
-                }
-              }
+              // Use configuration-based mapping
+              const mergedData = section.content
+                ? mergeContentToData(section.sectionType, section.data, section.content)
+                : section.data;
 
               return (
                 <div
@@ -426,83 +403,60 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
                     <p className="text-xs text-neutral-500">Edit content and styling for this section</p>
                   </div>
 
-                  <div>
-                    <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
-                      <Type className="w-3.5 h-3.5" />
-                      Heading
-                    </label>
-                    <input
-                      type="text"
-                      value={selectedSection.content?.heading || ''}
-                      onChange={(e) => updateSectionContent('heading', e.target.value)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      placeholder="Enter heading"
-                    />
-                  </div>
+                  {/* Dynamically render fields based on section configuration */}
+                  {getFieldsForSection(selectedSection.sectionType).map((field) => {
+                    if (field.type === 'button') {
+                      return null; // Handle buttons separately below
+                    }
 
-                  <div>
-                    <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
-                      <Type className="w-3.5 h-3.5" />
-                      Subheading
-                    </label>
-                    <input
-                      type="text"
-                      value={selectedSection.content?.subheading || ''}
-                      onChange={(e) => updateSectionContent('subheading', e.target.value)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      placeholder="Enter subheading"
-                    />
-                  </div>
+                    const icon = field.type === 'image' ? <Image className="w-3.5 h-3.5" /> : <Type className="w-3.5 h-3.5" />;
 
-                  <div>
-                    <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
-                      <Type className="w-3.5 h-3.5" />
-                      Text Content
-                    </label>
-                    <textarea
-                      value={selectedSection.content?.text || ''}
-                      onChange={(e) => updateSectionContent('text', e.target.value)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                      rows={4}
-                      placeholder="Enter text content"
-                    />
-                  </div>
+                    return (
+                      <div key={field.editorField}>
+                        <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
+                          {icon}
+                          {field.label}
+                        </label>
+                        {field.type === 'textarea' ? (
+                          <textarea
+                            value={selectedSection.content?.[field.editorField] || ''}
+                            onChange={(e) => updateSectionContent(field.editorField, e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                            rows={4}
+                            placeholder={`Enter ${field.label.toLowerCase()}`}
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            value={selectedSection.content?.[field.editorField] || ''}
+                            onChange={(e) => updateSectionContent(field.editorField, e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder={field.type === 'image' ? 'https://example.com/image.jpg' : `Enter ${field.label.toLowerCase()}`}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
 
-                  <div>
-                    <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
-                      <Image className="w-3.5 h-3.5" />
-                      Image URL
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="https://example.com/image.jpg"
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
-
-                  {/* Only show button fields for sections that have buttons */}
-                  {(selectedSection.sectionType === 'rsvp' || selectedSection.sectionType === 'story') && (
+                  {/* Button fields - only show if section has buttons */}
+                  {sectionHasButtons(selectedSection.sectionType) && (
                     <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Text</label>
-                        <input
-                          type="text"
-                          value={selectedSection.content?.buttonText || ''}
-                          onChange={(e) => updateSectionContent('buttonText', e.target.value)}
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                          placeholder="Button text"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Link</label>
-                        <input
-                          type="text"
-                          value={selectedSection.content?.buttonLink || ''}
-                          onChange={(e) => updateSectionContent('buttonLink', e.target.value)}
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                          placeholder="#"
-                        />
-                      </div>
+                      {getFieldsForSection(selectedSection.sectionType)
+                        .filter(f => f.type === 'button')
+                        .map((field) => (
+                          <div key={field.editorField}>
+                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                              {field.label}
+                            </label>
+                            <input
+                              type="text"
+                              value={selectedSection.content?.[field.editorField] || ''}
+                              onChange={(e) => updateSectionContent(field.editorField, e.target.value)}
+                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              placeholder={field.editorField === 'buttonLink' ? '#' : 'Button text'}
+                            />
+                          </div>
+                        ))}
                     </div>
                   )}
 
