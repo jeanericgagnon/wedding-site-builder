@@ -449,28 +449,31 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Text</label>
-                      <input
-                        type="text"
-                        value={selectedSection.content?.buttonText || ''}
-                        onChange={(e) => updateSectionContent('buttonText', e.target.value)}
-                        className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        placeholder="Button text"
-                      />
+                  {/* Only show button fields for sections that have buttons */}
+                  {(selectedSection.sectionType === 'rsvp' || selectedSection.sectionType === 'story') && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Text</label>
+                        <input
+                          type="text"
+                          value={selectedSection.content?.buttonText || ''}
+                          onChange={(e) => updateSectionContent('buttonText', e.target.value)}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="Button text"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Link</label>
+                        <input
+                          type="text"
+                          value={selectedSection.content?.buttonLink || ''}
+                          onChange={(e) => updateSectionContent('buttonLink', e.target.value)}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="#"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Link</label>
-                      <input
-                        type="text"
-                        value={selectedSection.content?.buttonLink || ''}
-                        onChange={(e) => updateSectionContent('buttonLink', e.target.value)}
-                        className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        placeholder="#"
-                      />
-                    </div>
-                  </div>
+                  )}
 
                   <div>
                     <label className="text-xs font-medium text-neutral-700 block mb-2">Design Style</label>
