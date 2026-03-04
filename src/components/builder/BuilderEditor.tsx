@@ -196,32 +196,63 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
 
         <div className="flex-1 overflow-y-auto">
           <div className="w-full">
-            {sections.map((section, index) => (
-              <div
-                key={section.id}
-                className={`relative transition-all ${
-                  selectedSectionId === section.id && !isFullscreen ? 'ring-2 ring-blue-500 ring-inset' : ''
-                } ${draggedIndex === index ? 'opacity-50' : ''}`}
-              >
-                {renderSectionPreview(section.sectionType, section.variantKey, {
-                  isPreviewMode: true,
-                  data: section.data,
-                  onEditField: (fieldPath: string) => {
-                    setSelectedSectionId(section.id);
-                    setIsFullscreen(false);
-                    setEditingMode('edit');
-                    setFocusedField(fieldPath);
-                    setTimeout(() => {
-                      const input = document.querySelector(`[data-field="${fieldPath}"]`) as HTMLInputElement;
-                      if (input) {
-                        input.focus();
-                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }
-                    }, 100);
-                  }
-                })}
-              </div>
-            ))}
+            {sections.map((section, index) => {
+              // Merge content changes back into data with proper field mapping
+              const mergedData = { ...section.data };
+              if (section.content) {
+                // Map generic content fields to section-specific data fields
+                if (section.sectionType === 'hero') {
+                  if (section.content.heading) mergedData.names = section.content.heading;
+                  if (section.content.subheading) mergedData.tagline = section.content.subheading;
+                  if (section.content.text) mergedData.date = section.content.text;
+                } else if (section.sectionType === 'story') {
+                  if (section.content.heading) mergedData.title = section.content.heading;
+                  if (section.content.text) mergedData.story = section.content.text;
+                } else if (section.sectionType === 'timeline') {
+                  if (section.content.heading) mergedData.title = section.content.heading;
+                } else if (section.sectionType === 'gallery') {
+                  if (section.content.heading) mergedData.title = section.content.heading;
+                  if (section.content.subheading) mergedData.subtitle = section.content.subheading;
+                } else if (section.sectionType === 'schedule') {
+                  if (section.content.heading) mergedData.title = section.content.heading;
+                } else if (section.sectionType === 'location') {
+                  if (section.content.heading) mergedData.venue = section.content.heading;
+                  if (section.content.subheading) mergedData.address = section.content.subheading;
+                } else if (section.sectionType === 'rsvp') {
+                  if (section.content.heading) mergedData.title = section.content.heading;
+                  if (section.content.text) mergedData.message = section.content.text;
+                } else if (section.sectionType === 'footer') {
+                  if (section.content.text) mergedData.message = section.content.text;
+                }
+              }
+
+              return (
+                <div
+                  key={section.id}
+                  className={`relative transition-all ${
+                    selectedSectionId === section.id && !isFullscreen ? 'ring-2 ring-blue-500 ring-inset' : ''
+                  } ${draggedIndex === index ? 'opacity-50' : ''}`}
+                >
+                  {renderSectionPreview(section.sectionType, section.variantKey, {
+                    isPreviewMode: true,
+                    data: mergedData,
+                    onEditField: (fieldPath: string) => {
+                      setSelectedSectionId(section.id);
+                      setIsFullscreen(false);
+                      setEditingMode('edit');
+                      setFocusedField(fieldPath);
+                      setTimeout(() => {
+                        const input = document.querySelector(`[data-field="${fieldPath}"]`) as HTMLInputElement;
+                        if (input) {
+                          input.focus();
+                          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }, 100);
+                    }
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
