@@ -4,10 +4,14 @@ import { renderSectionPreview } from '../../lib/previewGenerator';
 import { getVariantsBySection, getAllSectionTypes } from '../../registry/sectionRegistry';
 import {
   ChevronRight,
+  ChevronDown,
   Settings,
   Plus,
   GripVertical,
   X,
+  Image,
+  Type,
+  Sliders,
 } from 'lucide-react';
 
 interface BuilderEditorProps {
@@ -18,6 +22,21 @@ interface BuilderEditorProps {
 interface EditableSection extends TemplateSection {
   id: string;
   enabled: boolean;
+  content?: {
+    heading?: string;
+    subheading?: string;
+    text?: string;
+    images?: string[];
+    buttonText?: string;
+    buttonLink?: string;
+  };
+  advanced?: {
+    opacity?: number;
+    animation?: string;
+    customCSS?: string;
+    backgroundColor?: string;
+    textColor?: string;
+  };
 }
 
 export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose }) => {
@@ -26,12 +45,29 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
       ...section,
       id: `section-${idx}-${Date.now()}`,
       enabled: true,
+      content: {
+        heading: 'Sample Heading',
+        subheading: 'Sample Subheading',
+        text: 'Sample text content',
+        images: [],
+        buttonText: 'Learn More',
+        buttonLink: '#',
+      },
+      advanced: {
+        opacity: 100,
+        animation: 'none',
+        customCSS: '',
+        backgroundColor: '',
+        textColor: '',
+      },
     }))
   );
 
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [showAddSection, setShowAddSection] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [expandedSectionId, setExpandedSectionId] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const deleteSection = (id: string) => {
     const newSections = sections.filter(s => s.id !== id);
@@ -79,10 +115,43 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
       order: sections.length,
       id: `section-${sections.length}-${Date.now()}`,
       enabled: true,
+      content: {
+        heading: 'Sample Heading',
+        subheading: 'Sample Subheading',
+        text: 'Sample text content',
+        images: [],
+        buttonText: 'Learn More',
+        buttonLink: '#',
+      },
+      advanced: {
+        opacity: 100,
+        animation: 'none',
+        customCSS: '',
+        backgroundColor: '',
+        textColor: '',
+      },
     };
 
     setSections([...sections, newSection]);
     setShowAddSection(false);
+  };
+
+  const updateSectionContent = (field: string, value: string) => {
+    if (!selectedSectionId) return;
+    setSections(sections.map(s =>
+      s.id === selectedSectionId
+        ? { ...s, content: { ...s.content, [field]: value } }
+        : s
+    ));
+  };
+
+  const updateSectionAdvanced = (field: string, value: string | number) => {
+    if (!selectedSectionId) return;
+    setSections(sections.map(s =>
+      s.id === selectedSectionId
+        ? { ...s, advanced: { ...s.advanced, [field]: value } }
+        : s
+    ));
   };
 
   const handleSave = () => {
@@ -135,8 +204,8 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
         </div>
       </div>
 
-      {/* Right Sidebar */}
-      <div className="w-96 bg-white flex flex-col h-screen">
+      {/* Right Sidebar - 33% bigger */}
+      <div className="w-[512px] bg-white flex flex-col h-screen">
         <div className="px-5 py-3 border-b border-neutral-200 flex items-center justify-between">
           <button
             onClick={onClose}
@@ -147,8 +216,12 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
           </button>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {}}
-              className="px-4 py-1.5 bg-amber-50 text-amber-900 border border-amber-200 rounded-md hover:bg-amber-100 transition-colors text-sm font-medium"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className={`px-4 py-1.5 border rounded-md transition-colors text-sm font-medium ${
+                showAdvanced
+                  ? 'bg-amber-100 text-amber-900 border-amber-300'
+                  : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
+              }`}
             >
               Advanced
             </button>
@@ -171,64 +244,220 @@ export const BuilderEditor: React.FC<BuilderEditorProps> = ({ template, onClose 
 
             <div className="space-y-1.5">
               {sections.map((section, index) => (
-                <div
-                  key={section.id}
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragEnd={handleDragEnd}
-                  onClick={() => setSelectedSectionId(section.id)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all text-left cursor-pointer border-2 ${
-                    selectedSectionId === section.id
-                      ? 'bg-neutral-100 text-neutral-900 border-blue-400'
-                      : 'text-neutral-700 hover:bg-neutral-50 border-neutral-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <GripVertical className="w-4 h-4 text-neutral-400 cursor-move" />
-                    <span className="text-sm font-medium capitalize">{section.sectionType}</span>
+                <div key={section.id} className="border-2 border-neutral-200 rounded-lg overflow-hidden">
+                  <div
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => {
+                      setSelectedSectionId(section.id);
+                      setExpandedSectionId(expandedSectionId === section.id ? null : section.id);
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3 transition-all text-left cursor-pointer ${
+                      selectedSectionId === section.id
+                        ? 'bg-blue-50 text-neutral-900'
+                        : 'text-neutral-700 hover:bg-neutral-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <GripVertical className="w-4 h-4 text-neutral-400 cursor-move" />
+                      <span className="text-sm font-medium capitalize">{section.sectionType}</span>
+                    </div>
+                    {expandedSectionId === section.id ? (
+                      <ChevronDown className="w-4 h-4 text-neutral-400" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-neutral-400" />
+                    )}
                   </div>
-                  <ChevronRight className="w-4 h-4 text-neutral-400" />
+
+                  {/* Expanded Content Editor */}
+                  {expandedSectionId === section.id && (
+                    <div className="px-4 py-3 bg-white border-t border-neutral-200 space-y-3">
+                      {/* Content Fields */}
+                      <div>
+                        <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
+                          <Type className="w-3.5 h-3.5" />
+                          Heading
+                        </label>
+                        <input
+                          type="text"
+                          value={section.content?.heading || ''}
+                          onChange={(e) => updateSectionContent('heading', e.target.value)}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="Enter heading"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
+                          <Type className="w-3.5 h-3.5" />
+                          Subheading
+                        </label>
+                        <input
+                          type="text"
+                          value={section.content?.subheading || ''}
+                          onChange={(e) => updateSectionContent('subheading', e.target.value)}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="Enter subheading"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
+                          <Type className="w-3.5 h-3.5" />
+                          Text Content
+                        </label>
+                        <textarea
+                          value={section.content?.text || ''}
+                          onChange={(e) => updateSectionContent('text', e.target.value)}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                          rows={3}
+                          placeholder="Enter text content"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 mb-1.5">
+                          <Image className="w-3.5 h-3.5" />
+                          Image URL
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="https://example.com/image.jpg"
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Text</label>
+                          <input
+                            type="text"
+                            value={section.content?.buttonText || ''}
+                            onChange={(e) => updateSectionContent('buttonText', e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="Button text"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-neutral-700 block mb-1.5">Button Link</label>
+                          <input
+                            type="text"
+                            value={section.content?.buttonLink || ''}
+                            onChange={(e) => updateSectionContent('buttonLink', e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="#"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Advanced Settings */}
+                      {showAdvanced && (
+                        <div className="pt-3 border-t border-neutral-200 space-y-3">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <Sliders className="w-3.5 h-3.5 text-amber-600" />
+                            <h4 className="text-xs font-semibold text-amber-900">Advanced Settings</h4>
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+                              Opacity: {section.advanced?.opacity}%
+                            </label>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={section.advanced?.opacity || 100}
+                              onChange={(e) => updateSectionAdvanced('opacity', parseInt(e.target.value))}
+                              className="w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">Animation</label>
+                            <select
+                              value={section.advanced?.animation || 'none'}
+                              onChange={(e) => updateSectionAdvanced('animation', e.target.value)}
+                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            >
+                              <option value="none">None</option>
+                              <option value="fade-in">Fade In</option>
+                              <option value="slide-up">Slide Up</option>
+                              <option value="slide-down">Slide Down</option>
+                              <option value="zoom-in">Zoom In</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">Background Color</label>
+                            <input
+                              type="text"
+                              value={section.advanced?.backgroundColor || ''}
+                              onChange={(e) => updateSectionAdvanced('backgroundColor', e.target.value)}
+                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              placeholder="#ffffff or transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">Text Color</label>
+                            <input
+                              type="text"
+                              value={section.advanced?.textColor || ''}
+                              onChange={(e) => updateSectionAdvanced('textColor', e.target.value)}
+                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              placeholder="#000000"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-medium text-neutral-700 block mb-1.5">Custom CSS</label>
+                            <textarea
+                              value={section.advanced?.customCSS || ''}
+                              onChange={(e) => updateSectionAdvanced('customCSS', e.target.value)}
+                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono resize-none"
+                              rows={4}
+                              placeholder="padding: 20px;&#10;margin: 0;"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="text-xs font-medium text-neutral-700 block mb-1.5">Variant</label>
+                        <select
+                          value={section.variantKey}
+                          onChange={(e) => {
+                            setSections(sections.map(s =>
+                              s.id === section.id ? { ...s, variantKey: e.target.value } : s
+                            ));
+                          }}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                          {getVariantsBySection(section.sectionType).map((variant) => (
+                            <option key={variant.variantKey} value={variant.variantKey}>
+                              {variant.displayName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteSection(section.id);
+                        }}
+                        className="w-full px-3 py-2 text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors text-sm font-medium"
+                      >
+                        Delete Section
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Section Settings - Show when selected */}
-          {selectedSection && (
-            <div className="border-t border-neutral-200 px-5 py-3">
-              <div className="flex items-center gap-2 mb-3">
-                <Settings className="w-4 h-4 text-neutral-600" />
-                <h3 className="font-semibold text-neutral-900 capitalize text-sm">{selectedSection.sectionType}</h3>
-              </div>
-
-              <div className="mb-4">
-                <label className="text-xs font-medium text-neutral-700 block mb-1.5">Variant</label>
-                <select
-                  value={selectedSection.variantKey}
-                  onChange={(e) => {
-                    setSections(sections.map(s =>
-                      s.id === selectedSectionId ? { ...s, variantKey: e.target.value } : s
-                    ));
-                  }}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                >
-                  {getVariantsBySection(selectedSection.sectionType).map((variant) => (
-                    <option key={variant.variantKey} value={variant.variantKey}>
-                      {variant.displayName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                onClick={() => deleteSection(selectedSection.id)}
-                className="w-full px-3 py-2 text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors text-sm font-medium"
-              >
-                Delete section
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Add Section Button - Fixed at bottom */}
